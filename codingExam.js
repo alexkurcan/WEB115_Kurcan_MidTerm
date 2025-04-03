@@ -2,36 +2,61 @@ const button = document.getElementById("Button1");
 const space = document.getElementById("space");
 
 button.addEventListener('click', function(){
-    let loanAmount = prompt("Please enter your loan amount (without commas)");
-    let intialDownPayment = prompt("Please enter the amount of your down payment");
-    let termYears = prompt("Please enter the loan term in years (either 30 or 15)");
-    let interestRate = 0.0575
-    paragraphtermYears = document.createElement('p');
-    paragraphtermYears.textcontent = "Moragage term in years: " + termYears;
-    paragraphloanAmount = document.createElement('p');
-    paragraphloanAmount.textcontent = "Loan Amount: " + loanAmount;
-    paragraphintialDownPayment = document.createElement('p');
-    paragraphintialDownPayment.textcontent = "Down Payment: " + ((intialDownPayment/100)*loanAmount);
-    space.appendChild(loanAmount);
-    space.appendChild(intialDownPayment);
-    space.appendChild(loanTermYears);
-    space.appendChild(monthlyPayment);
-    space.appendChild(totalInterest);
-    space.appendChild(morgargeTotalAmt);
-    monthlyPayment = (((interestRate/12)*loanAmount)/(1-(1+(interestRate/12)**(termYears*-12)))).toFixed(2); 
-    monthlyPayment = monthlyPayment.toFixed(2);
-    paragraphmonthlyPayment = document.createElement('p');
-    paragraphmonthlyPayment.textcontent = "Monthly Morgarge Payment: " + monthlyPayment;
-    totalInterest = (monthlyPayment*termYears*12)-loanAmount;
-    paragraphtotalInterest = document.createElement('p');
-    paragraphtotalInterest.textcontent = "Total Interest Amount: " + totalInterest;
-    morgargeTotalAmt = loanAmount + totalInterest;
-    paragraphmorgargeTotalAmt = document.createElement('p');
-    paragraphmorgargeTotalAmt.textcontent = "Total Mortgage Amount: " + morgargeTotalAmt;
-    for(let i = 0; i < (termYears*12); i++){
-        loanBalenceMonthly = morgargeTotalAmt-(monthlyPayment)
-        paragraphMonth = document.createElement('p')
-        paragraphMonth.textcontent = "Month " + (i + 1) + " " + loanBalenceMonthly
-        space.appendChild(paragraphMonth)
+    let loanAmount = parseFloat(prompt("Please enter your loan amount (without commas)"));
+    let initialDownPayment = parseFloat(prompt("Please enter the amount of your down payment"));
+    let termYears = parseInt(prompt("Please enter the loan term in years (either 30 or 15)"));
+    let interestRate = 0.0575;
+    
+    if (isNaN(loanAmount) || isNaN(initialDownPayment) || isNaN(termYears) || (termYears !== 15 && termYears !== 30)) {
+        alert("Invalid input. Please enter numeric values and a valid loan term (15 or 30 years).");
+        return;
     }
-})
+    
+    let loanBalance = loanAmount - initialDownPayment;
+    let monthlyInterestRate = interestRate / 12;
+    let totalMonths = termYears * 12;
+    
+    let monthlyPayment = (loanBalance * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -totalMonths));
+    
+    space.innerHTML = "";
+
+    function createParagraph(text) {
+        let paragraph = document.createElement('p');
+        paragraph.textContent = text;
+        paragraph.classList.add('month-result');
+        space.appendChild(paragraph);
+    }
+    
+    createParagraph("Mortgage Term in Years: " + termYears);
+    createParagraph("Loan Amount: $" + loanAmount.toFixed(2));
+    createParagraph("Down Payment: $" + initialDownPayment.toFixed(2));
+    createParagraph("Monthly Mortgage Payment: $" + monthlyPayment.toFixed(2));
+
+    let remainingBalance = loanBalance;
+    let totalInterestPaid = 0;
+    
+    let table = document.createElement("table");
+    table.border = "1";
+    let headerRow = table.insertRow();
+    headerRow.innerHTML = "<th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Remaining Balance</th>";
+    
+    for (let i = 1; i <= totalMonths; i++) {
+        let interestPayment = remainingBalance * monthlyInterestRate;
+        let principalPayment = monthlyPayment - interestPayment;
+        totalInterestPaid += interestPayment;
+        remainingBalance -= principalPayment;
+        if (remainingBalance < 0) remainingBalance = 0;
+
+        let row = table.insertRow();
+        row.innerHTML = `<td>${i}</td><td>$${monthlyPayment.toFixed(2)}</td><td>$${principalPayment.toFixed(2)}</td><td>$${interestPayment.toFixed(2)}</td><td>$${remainingBalance.toFixed(2)}</td>`;
+
+        if (remainingBalance <= 0) {
+            break;
+        }
+    }
+
+    space.appendChild(table);
+
+    createParagraph("Total Interest Paid: $" + totalInterestPaid.toFixed(2));
+    createParagraph("Total Amount Paid Over Loan Term: $" + (loanBalance + totalInterestPaid).toFixed(2));
+});
